@@ -1,0 +1,157 @@
+---
+- name: Deploy Weather App to Minikube
+  hosts: localhost
+  become: yes
+
+  vars:
+    dockerhub_image: "<YOUR_DOCKERHUB_USERNAME>/weather-app:latest"
+    user_home: "/home/ubuntu"
+
+  tasks:
+
+    # -------------------------------
+    # Install Dependencies
+    # -------------------------------
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - conntrack
+        state: present
+        update_cache: yes
+
+    # -------------------------------
+    # Get latest kubectl version
+    # -------------------------------
+    - name: Get latest kubectl version
+      shell: "curl -L -s https://dl.k8s.io/release/stable.txt"
+      register: kubectl_version
+      changed_when: false
+
+    # -------------------------------
+    # Install kubectl
+    # -------------------------------
+    - name: Download kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    # -------------------------------
+    # Install Minikube
+    # -------------------------------
+    - name: Download Minikube binary
+      get_url:
+        url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+
+    # -------------------------------
+    # Fully remove old Minikube data
+    # -------------------------------
+    - name: Purge all Minikube clusters
+      command: minikube delete --all --purge
+      ignore_errors: yes
+
+    - name: Remove leftover Minikube directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ user_home }}/.minikube"
+        - "{{ user_home }}/.kube"
+      ignore_errors: yes
+
+    # -------------------------------
+    # Start Minikube (IMPORTANT FIX)
+    # -------------------------------
+    - name: Start Minikube with Docker driver (run as ubuntu user)
+      become: false
+      command: minikube start --driver=docker
+      environment:
+        CHANGE_MINIKUBE_NONE_USER: "true"
+        MINIKUBE_HOME: "{{ user_home }}"
+        HOME: "{{ user_home }}"
+
+    # -------------------------------
+    # Create Kubernetes Deployment YAML
+    # -------------------------------
+    - name: Create Kubernetes deployment file
+      copy:
+        dest: /tmp/weather-deployment.yaml
+        content: |
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: weather-app
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: weather-app
+            strategy:
+              type: RollingUpdate
+              rollingUpdate:
+                maxUnavailable: 1
+                maxSurge: 1
+            template:
+              metadata:
+                labels:
+                  app: weather-app
+              spec:
+                containers:
+                - name: weather-app
+                  image: {{ dockerhub_image }}
+                  ports:
+                  - containerPort: 5000
+
+    # -------------------------------
+    # Create Kubernetes Service YAML
+    # -------------------------------
+    - name: Create Kubernetes service file
+      copy:
+        dest: /tmp/weather-service.yaml
+        content: |
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: weather-service
+          spec:
+            type: NodePort
+            selector:
+              app: weather-app
+            ports:
+              - port: 80
+                targetPort: 5000
+                nodePort: 30080
+
+    # -------------------------------
+    # Apply Deployment
+    # -------------------------------
+    - name: Apply deployment to Kubernetes
+      become: false
+      command: kubectl apply -f /tmp/weather-deployment.yaml
+      environment:
+        MINIKUBE_HOME: "{{ user_home }}"
+        HOME: "{{ user_home }}"
+
+    # -------------------------------
+    # Apply Service
+    # -------------------------------
+    - name: Apply service to Kubernetes
+      become: false
+      command: kubectl apply -f /tmp/weather-service.yaml
+      environment:
+        MINIKUBE_HOME: "{{ user_home }}"
+        HOME: "{{ user_home }}"
+
+    # -------------------------------
+    # Scale Deployment
+    # -------------------------------
+    - name: Scale deployment to 4 replicas
+      become: false
+      command: kubectl scale deployment/weather-app --replicas=4
+      environment:
+        MINIKUBE_HOME: "{{ user_home }}"
+        HOME: "{{ user_home }}"
