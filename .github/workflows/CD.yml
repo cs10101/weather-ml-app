@@ -72,4 +72,5 @@ jobs:
       - name: Wait for pods to be ready
         run: |
           kubectl get pods
+          kubectl logs -l app=weather-ml-app
           kubectl wait --for=condition=ready pod --all --timeout=120s
