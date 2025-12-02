@@ -1,7 +1,9 @@
+# importing necessary libraries
 import unittest
 from app import app, classify_weather, load_model
 import numpy as np
 
+# Unit tests for the model and app
 class TestUnit(unittest.TestCase):
     def setUp(self):
         app.testing = True
@@ -52,5 +54,6 @@ class TestUnit(unittest.TestCase):
         class_result, _ = classify_weather(test_input)
         self.assertEqual(class_result, 'cloudy')
 
+# Run the tests
 if __name__ == '__main__':
     unittest.main()

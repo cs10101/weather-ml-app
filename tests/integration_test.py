@@ -1,7 +1,8 @@
+# importing necessary libraries
 import unittest
 from app import app  # Import your Flask app instance
 
-
+# Integration tests to ensure the model and app work together correctly
 class TestModelAppIntegration(unittest.TestCase):
 
     def setUp(self):
@@ -42,5 +43,6 @@ class TestModelAppIntegration(unittest.TestCase):
         # Ensure that classification is in valid classes
         self.assertTrue(found, "Predicted class is not one of the 9 valid weather classes")
 
+# Run the tests
 if __name__ == '__main__':
     unittest.main()
