@@ -1,3 +1,4 @@
+# importing necessary libraries
 import unittest
 from app import app
 
@@ -18,5 +19,6 @@ class TestAppSmoke(unittest.TestCase):
         # Check that the HTML contains a form tag
         self.assertIn(b'<form', response.data)
 
+# Run the tests
 if __name__ == '__main__':
     unittest.main()
