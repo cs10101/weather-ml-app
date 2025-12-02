@@ -19,7 +19,7 @@ spec:
           image: jstephxn/weather-ml-app:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 5000
+            - containerPort: 5001
           livenessProbe:
             httpGet:
               path: /
@@ -32,3 +32,4 @@ spec:
               port: 5000
             initialDelaySeconds: 3
             periodSeconds: 5
+
