@@ -30,6 +30,10 @@ jobs:
       - name: Pull the image back from Docker Hub
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
+      
+      - name: Remove old test container if it exists
+        run: |
+          docker rm -f app_test || true
 
       - name: Run test container
         run: |
