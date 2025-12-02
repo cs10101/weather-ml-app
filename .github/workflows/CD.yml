@@ -28,7 +28,7 @@ jobs:
       - name: Deploy to EC2 Kubernetes (Rolling Update)
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.EC2_SSH_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
