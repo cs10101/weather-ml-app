@@ -37,15 +37,28 @@ jobs:
 
       - name: Test run Docker container
         run: |
-          docker run -d --name testc weather-ml-app-ci-test
-          sleep 8
+          set -e
 
-          # Check container health
+          # Start container — change 5001 if your app uses a different port
+          docker run -d --name testc -p 5001:5001 weather-ml-app-ci-test
+          sleep 10
+
+          echo "=== Docker ps output ==="
+          docker ps -a
+
+          # Check container stayed running
           if [ -z "$(docker ps -q -f name=testc)" ]; then
-            echo "Container failed to run"
+            echo "Container exited unexpectedly"
+            echo "=== Container logs ==="
             docker logs testc || true
             exit 1
           fi
+
+          echo "=== Curl test on http://localhost:5001 ==="
+          curl -v http://localhost:5001/ || true
+
+          echo "=== Final container logs ==="
+          docker logs testc || true
 
           docker stop testc
           docker rm testc
