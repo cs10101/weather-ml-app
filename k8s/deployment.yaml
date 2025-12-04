@@ -8,7 +8,7 @@ spec:
   replicas: 4
   selector:
     matchLabels:
-      app: weather-ml-app
+      app: weather-ml-app 
   template:
     metadata:
       labels:
