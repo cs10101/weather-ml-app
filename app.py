@@ -7,7 +7,7 @@ import time
 app = Flask(__name__)
 
 # fixed a syntax error in the list below
-weather_classes = ['clear', 'cloudy', 'drizzly', 'foggy', 'hazey', 'misty', 'rain', 'smokey', 'thunderstorm'] 
+weather_classes = ['clear', 'cloudy', 'drizzly', 'foggy', 'hazey', 'misty', 'rain', 'smokey', 'thunderstorm']
 
 # function to load the model
 def load_model(model_path = 'model/model.pkl'):
